@@ -699,7 +699,8 @@ class SingletaskStratifiedSplitter(Splitter):
 
         y_s = dataset.y[:, self.task_number]
         sortidx = np.argsort(y_s)
-        sortidx_list = np.array_split(sortidx, k)
+        # Interleave sorted indices so every fold spans the full range of y
+        sortidx_list = [sortidx[i::k] for i in range(k)]
 
         fold_datasets = []
         for fold in range(k):

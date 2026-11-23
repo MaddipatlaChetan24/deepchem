@@ -523,6 +523,26 @@ class TestSplitter(unittest.TestCase):
         assert len(merged_dataset) == len(dataset)
         assert sorted(merged_dataset.ids) == (sorted(dataset.ids))
 
+    def test_singletask_stratified_splitter_k_fold_split(self):
+        """
+        Test SingletaskStratifiedSplitter k-fold folds are stratified on y.
+        """
+        n_samples = 15
+        X = np.random.rand(n_samples, 2)
+        y = np.arange(n_samples, dtype=float).reshape(-1, 1)
+        dataset = dc.data.NumpyDataset(X, y, ids=np.arange(n_samples))
+
+        K = 3
+        fold_datasets = dc.splits.SingletaskStratifiedSplitter().k_fold_split(
+            dataset, K)
+        all_ids = np.concatenate([fold.ids for fold in fold_datasets])
+        assert sorted(all_ids) == list(range(n_samples))
+        for fold in fold_datasets:
+            assert len(fold) == n_samples / K
+            # Every fold spans the full range of y
+            assert fold.y.min() < n_samples / K
+            assert fold.y.max() >= n_samples - n_samples / K
+
     def test_multitask_random_split(self):
         """
         Test multitask RandomSplitter class.
